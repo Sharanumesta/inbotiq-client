@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { setToken } from "../utils/auth";
 import { Link } from "react-router-dom";
@@ -28,33 +29,41 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+const submit = async (e) => {
+  e.preventDefault();
+  if (!validateForm()) return;
+  setLoading(true);
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/auth/login`,
+      form,
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
-    setLoading(true);
+    setToken(res.data.token);
+    window.location = "/dashboard";
 
-    const res = await fetch("http://localhost:8080/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+  } catch (err) {
+    console.error("Login error:", err);
 
-    const data = await res.json();
-    setLoading(false);
-
-    if (res.ok) {
-      setToken(data.token);
-      window.location = "/dashboard";
+    if (err.response) {
+      setErrors({ backend: err.response.data.msg || "Login failed" });
+    } else if (err.request) {
+      setErrors({ backend: "No response from server." });
     } else {
-      setErrors({ backend: data.msg || "Login failed" });
+      setErrors({ backend: "Unexpected error occurred." });
     }
-  };
+  }
+
+  setLoading(false);
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white p-6 md:p-8 rounded-xl shadow-md w-full max-w-md">
-
         <h1 className="text-3xl font-bold text-center mb-6">Login</h1>
         {errors.backend && (
           <p className="text-red-600 text-center mb-3">{errors.backend}</p>
@@ -69,9 +78,7 @@ export default function Login() {
               }`}
               placeholder="Email"
               value={form.email}
-              onChange={(e) =>
-                setForm({ ...form, email: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
             {errors.email && (
               <p className="text-red-600 text-sm mt-1">{errors.email}</p>
@@ -86,9 +93,7 @@ export default function Login() {
               }`}
               placeholder="Password"
               value={form.password}
-              onChange={(e) =>
-                setForm({ ...form, password: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
 
             <button

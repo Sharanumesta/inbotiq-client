@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { setToken } from "../utils/auth";
 import { Link } from "react-router-dom";
@@ -15,7 +16,6 @@ export default function Signup() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Validation
   const validateForm = () => {
     const newErrors = {};
 
@@ -41,33 +41,40 @@ export default function Signup() {
 
   const submit = async (e) => {
     e.preventDefault();
+
     if (!validateForm()) return;
-
     setLoading(true);
-    const res = await fetch("http://localhost:8080/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
 
-    const data = await res.json();
-    setLoading(false);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/register`,
+        form,
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-    if (res.ok) {
-      setToken(data.token);
+      setToken(res.data.token);
       window.location = "/dashboard";
-    } else {
-      setErrors({ backend: data.msg || "Signup failed" });
+    } catch (err) {
+      console.error("Signup error:", err);
+
+      if (err.response) {
+        setErrors({ backend: err.response.data.msg || "Signup failed" });
+      }
+      else if (err.request) {
+        setErrors({ backend: "No response from server." });
+      }
+      else {
+        setErrors({ backend: "Unexpected error occurred." });
+      }
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white p-6 md:p-8 rounded-xl shadow-md w-full max-w-md">
-        
-        <h1 className="text-3xl font-bold text-center mb-6">
-          Create Account
-        </h1>
+        <h1 className="text-3xl font-bold text-center mb-6">Create Account</h1>
 
         {errors.backend && (
           <p className="text-red-600 text-center mb-4">{errors.backend}</p>

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { getToken, logout } from "../utils/auth";
 
@@ -15,23 +16,26 @@ export default function Dashboard() {
       return;
     }
 
-    fetch("http://localhost:8080/api/auth/me", {
-      headers: { Authorization: "Bearer " + token },
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.msg || "Failed to fetch user");
-        }
-        return res.json();
+    axios.get(`${import.meta.env.VITE_API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       })
-      .then((data) => {
-        setUser(data);
+      .then((res) => {
+        setUser(res.data);
         setLoading(false);
       })
       .catch((err) => {
         console.error("Dashboard error:", err);
-        setError(err.message);
+
+        if (err.response) {
+          setError(err.response.data.msg || "Failed to fetch user");
+        } else if (err.request) {
+          setError("No response from server.");
+        } else {
+          setError("Request error occurred.");
+        }
+
         setLoading(false);
       });
   }, []);
@@ -72,7 +76,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="bg-white max-w-2xl mx-auto p-6 rounded-xl shadow-md">
-
         <h1 className="text-3xl font-bold mb-2">
           Welcome, <span className="text-blue-600">{user.name}</span>
         </h1>
@@ -83,13 +86,21 @@ export default function Dashboard() {
 
         {user.role === "ADMIN" ? (
           <div className="p-4 bg-purple-100 rounded-lg border border-purple-300">
-            <h2 className="text-xl font-bold mb-2 text-purple-800">Admin Dashboard</h2>
-            <p className="text-gray-700">Manage users, view analytics, and access admin tools.</p>
+            <h2 className="text-xl font-bold mb-2 text-purple-800">
+              Admin Dashboard
+            </h2>
+            <p className="text-gray-700">
+              Manage users, view analytics, and access admin tools.
+            </p>
           </div>
         ) : (
           <div className="p-4 bg-green-100 rounded-lg border border-green-300">
-            <h2 className="text-xl font-bold mb-2 text-green-800">User Dashboard</h2>
-            <p className="text-gray-700">Access your personal dashboard and user features.</p>
+            <h2 className="text-xl font-bold mb-2 text-green-800">
+              User Dashboard
+            </h2>
+            <p className="text-gray-700">
+              Access your personal dashboard and user features.
+            </p>
           </div>
         )}
 
@@ -102,7 +113,6 @@ export default function Dashboard() {
         >
           Logout
         </button>
-
       </div>
     </div>
   );
