@@ -16,7 +16,7 @@ export default function Dashboard() {
       return;
     }
 
-    axios.get(`${import.meta.env.VITE_API_URL}/auth/me`, {
+    axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
