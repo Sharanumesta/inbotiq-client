@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { getToken } from "./utils/auth";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import { getToken } from "./utils/auth";
+import NotFound from "./pages/NotFound";
 
 function PrivateRoute({ children }) {
   const token = getToken();
@@ -25,6 +26,7 @@ export default function App() {
               </PrivateRoute>
             }
           />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </div>

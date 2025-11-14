@@ -1,70 +1,56 @@
 import axios from "axios";
-import { useState } from "react";
-import { setToken } from "../utils/auth";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { setToken, getToken } from "../utils/auth";
+import { Link, useNavigate } from "react-router-dom";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const token = getToken();
+    if (token) navigate("/dashboard");
+  }, []);
+
   const validateForm = () => {
     const newErrors = {};
-
-    if (!form.email.trim()) {
-      newErrors.email = "Email is required.";
-    } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-      newErrors.email = "Enter a valid email address.";
-    }
-
-    if (!form.password.trim()) {
-      newErrors.password = "Password is required.";
-    } else if (form.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters.";
-    }
-
+    if (!form.email.trim()) newErrors.email = "Email is required.";
+    else if (!/^\S+@\S+\.\S+$/.test(form.email)) newErrors.email = "Enter a valid email address.";
+    if (!form.password.trim()) newErrors.password = "Password is required.";
+    else if (form.password.length < 6) newErrors.password = "Password must be at least 6 characters.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-const submit = async (e) => {
-  e.preventDefault();
-  if (!validateForm()) return;
-  setLoading(true);
-  try {
-    const res = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/auth/login`,
-      form,
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-    setToken(res.data.token);
-    window.location = "/dashboard";
-
-  } catch (err) {
-    console.error("Login error:", err);
-
-    if (err.response) {
-      setErrors({ backend: err.response.data.msg || "Login failed" });
-    } else if (err.request) {
-      setErrors({ backend: "No response from server." });
-    } else {
-      setErrors({ backend: "Unexpected error occurred." });
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        form
+      );
+      setToken(res.data.token);
+      navigate("/dashboard");
+    } catch (err) {
+      if (err.response) setErrors({ backend: err.response.data.msg || "Login failed" });
+      else if (err.request) setErrors({ backend: "No response from server." });
+      else setErrors({ backend: "Unexpected error occurred." });
     }
-  }
-
-  setLoading(false);
-};
-
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white p-6 md:p-8 rounded-xl shadow-md w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-6">Login</h1>
+
         {errors.backend && (
           <p className="text-red-600 text-center mb-3">{errors.backend}</p>
         )}
@@ -95,7 +81,6 @@ const submit = async (e) => {
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
-
             <button
               type="button"
               className="absolute top-3 right-3 text-gray-600"
@@ -107,7 +92,6 @@ const submit = async (e) => {
                 <AiOutlineEye size={22} />
               )}
             </button>
-
             {errors.password && (
               <p className="text-red-600 text-sm mt-1">{errors.password}</p>
             )}
