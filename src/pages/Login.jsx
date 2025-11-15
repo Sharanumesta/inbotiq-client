@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { setToken, getToken } from "../utils/auth";
 import { Link, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 export default function Login() {
@@ -9,7 +10,6 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -30,30 +30,41 @@ export default function Login() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setLoading(true);
+    Swal.fire({
+      title: "Logging in...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/auth/login`,
         form
       );
+
+      Swal.fire({
+        icon: "success",
+        title: "Login successful!",
+        timer: 1500,
+        showConfirmButton: false
+      });
+
       setToken(res.data.token);
-      navigate("/dashboard");
+      setTimeout(() => navigate("/dashboard"), 1200);
+
     } catch (err) {
-      if (err.response) setErrors({ backend: err.response.data.msg || "Login failed" });
-      else if (err.request) setErrors({ backend: "No response from server." });
-      else setErrors({ backend: "Unexpected error occurred." });
+      Swal.fire({
+        icon: "error",
+        title: "Login failed",
+        text: err.response?.data?.msg || "Try again"
+      });
     }
-    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white p-6 md:p-8 rounded-xl shadow-md w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-6">Login</h1>
-
-        {errors.backend && (
-          <p className="text-red-600 text-center mb-3">{errors.backend}</p>
-        )}
 
         <form className="space-y-4" onSubmit={submit}>
           <div>
@@ -81,27 +92,24 @@ export default function Login() {
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
+
             <button
               type="button"
               className="absolute top-3 right-3 text-gray-600"
               onClick={() => setShowPass(!showPass)}
             >
-              {showPass ? (
-                <AiOutlineEyeInvisible size={22} />
-              ) : (
-                <AiOutlineEye size={22} />
-              )}
+              {showPass ? <AiOutlineEyeInvisible size={22} /> : <AiOutlineEye size={22} />}
             </button>
+
             {errors.password && (
               <p className="text-red-600 text-sm mt-1">{errors.password}</p>
             )}
           </div>
 
           <button
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition"
           >
-            {loading ? "Logging in..." : "Login"}
+            Login
           </button>
         </form>
 
