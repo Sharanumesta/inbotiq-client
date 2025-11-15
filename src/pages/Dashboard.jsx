@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { getToken, logout } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
+import Logout from "../components/Logout";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -90,15 +91,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        <button
-          onClick={() => {
-            logout();
-            navigate("/login");
-          }}
-          className="mt-6 bg-red-600 text-white px-5 py-3 rounded-md font-semibold hover:bg-red-700 transition"
-        >
-          Logout
-        </button>
+        <Logout />
       </div>
     </div>
   );
