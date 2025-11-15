@@ -16,10 +16,6 @@ This project demonstrates:
 ### **Frontend (Netlify)**  
 https://inbotiq.netlify.app/
 
-### **Backend (Render)**  
-https://inbotiq-server.onrender.com  
-*(Root URL only — API endpoints are internal)*
-
 ---
 
 ## 🔥 Features
